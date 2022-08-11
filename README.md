@@ -60,7 +60,7 @@ This will generate an ```helloplugin.so``` file inside the modules folder, that 
 
 ### Step 3
 
-Use the module with the service. For example running it with:no 
+Use the module with the service. For example running it with:
 
 ```sh
 go run service.go -MODULE_FOLDER=modules/
@@ -77,6 +77,14 @@ curl http://localhost:8880/hello
 
 hello from the plugin
 ```
+
+### Hot reload and important details
+
+The service supports hot reload of modules, this means that you can implement a specific handler, then modify the behaviour and 
+copy the new .so file in the folder and everything will work **automagically**.
+
+Caveat: the module code **needs** to be different and so the module compiled file name, otherwise nothing will be reloaded
+(and it could panic) - this is due to the plugin.Open(...) method that doesn't work on the same file and behaves sometimes weirdly.
 
 
 ### Using Docker
