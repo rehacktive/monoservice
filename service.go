@@ -119,7 +119,6 @@ func (srv *Service) reloadHandler(handler monoservice.HandlerInterface) {
 		}
 
 		if t == handler.Path() {
-			fmt.Println("replacing handler for path ", t)
 			handler.Init()
 			route.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				response := handler.Process(r)

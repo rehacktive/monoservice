@@ -30,13 +30,10 @@ func (p handlerPlugin) Path() string {
 	return "/hello"
 }
 
-func (p handlerPlugin) Handler() func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case "GET":
-			respondWithJSON(w, http.StatusOK, "hello from the plugin")
-			return
-		}
+func (p handlerPlugin) Process(r *http.Request) monoservice.JSONResponse {
+	return monoservice.JSONResponse{
+		JSONContent: `{"message":"hello from the plugin"}`,
+		Code:        http.StatusOK,
 	}
 }
 
