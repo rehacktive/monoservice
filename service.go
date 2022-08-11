@@ -19,22 +19,27 @@ const (
 	envAddress = "ADDRESS"
 )
 
+var modulesFolder string
+
 type Service struct {
-	address string
-	router  *mux.Router
+	address          string
+	router           *mux.Router
+	registeredRoutes []string
 }
 
 func main() {
-	var modulesFolder, address string
+	var address string
 
 	flag.StringVar(&modulesFolder, envModule, "modules/", "modules folder")
 	flag.StringVar(&address, envAddress, ":8880", "address:port to listen from")
 
 	flag.Parse()
 
+	routes := make([]string, 0)
 	srv := Service{
-		address: address,
-		router:  mux.NewRouter(),
+		address:          address,
+		router:           mux.NewRouter(),
+		registeredRoutes: routes,
 	}
 
 	server := &http.Server{
@@ -51,24 +56,7 @@ func main() {
 	go modulesManager.WatchFolder()
 	go func() {
 		for m := range moduleEvents {
-			switch m.Action {
-			case monoservice.NEW:
-				{
-					log.Println("add plugin ", m.Name)
-					srv.addHandler(*m.Handler)
-				}
-			case monoservice.UPDATE:
-				{
-					log.Println("replace plugin ", m.Name)
-					srv.reloadHandler(*m.Handler)
-
-				}
-			case monoservice.REMOVE:
-				{
-					log.Println("remove plugin ", m.Name)
-				}
-			}
-
+			srv.useModule(m)
 		}
 	}()
 
@@ -89,7 +77,33 @@ func main() {
 	log.Println("best regards.")
 }
 
+func (srv *Service) useModule(m monoservice.Module) {
+	defer func() {
+		if r := recover(); r != nil {
+			// the plugin method may panic
+			fmt.Println("Recovered. Error:\n", r)
+		}
+	}()
+
+	log.Println("add plugin ", m.Name)
+	log.Println(m)
+	handler, err := monoservice.LoadPlugin(modulesFolder, m.Name)
+	if err != nil {
+		fmt.Println("[skipping] error on LoadPlugin ", err)
+		return
+	}
+	// check if already registered, reload
+	if contains(srv.registeredRoutes, handler.Path()) {
+		srv.reloadHandler(handler)
+	} else {
+		// else add it
+		srv.addHandler(handler)
+	}
+}
+
 func (srv *Service) addHandler(handler monoservice.HandlerInterface) {
+	srv.registeredRoutes = append(srv.registeredRoutes, handler.Path())
+
 	handler.Init()
 	srv.router.HandleFunc(handler.Path(), func(w http.ResponseWriter, r *http.Request) {
 		response := handler.Process(r)
@@ -99,7 +113,6 @@ func (srv *Service) addHandler(handler monoservice.HandlerInterface) {
 
 func (srv *Service) reloadHandler(handler monoservice.HandlerInterface) {
 	srv.router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-		fmt.Println("1")
 		t, err := route.GetPathTemplate()
 		if err != nil {
 			return err
@@ -115,4 +128,15 @@ func (srv *Service) reloadHandler(handler monoservice.HandlerInterface) {
 		}
 		return nil
 	})
+}
+
+// utils
+
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }

@@ -12,7 +12,7 @@ type handlerPlugin struct{}
 var HandlerPlugin handlerPlugin
 
 func (p handlerPlugin) Init() {
-	log.Println("another plugin initialized")
+	log.Println("another plugin initialized 3")
 }
 
 func (p handlerPlugin) Path() string {
@@ -21,7 +21,7 @@ func (p handlerPlugin) Path() string {
 
 func (p handlerPlugin) Process(r *http.Request) monoservice.JSONResponse {
 	return monoservice.JSONResponse{
-		JSONContent: `{"message":"hello from the another plugin 8"}`,
+		JSONContent: `{"message":"hello from the another plugin 3"}`,
 		Code:        http.StatusOK,
 	}
 }

@@ -15,26 +15,16 @@ type ModulesManager struct {
 	chanEvents    chan Module
 }
 
-type ActionType int64
-
-const (
-	NEW ActionType = iota
-	UPDATE
-	REMOVE
-	NONE
-)
-
 type Module struct {
 	Name    string
-	Action  ActionType
 	Handler *HandlerInterface
 }
 
 func NewModulesManager(folder string, chanEvents chan Module) ModulesManager {
 	return ModulesManager{
 		modulesFolder: folder,
-		modules:       make(map[string]*HandlerInterface, 0),
 		chanEvents:    chanEvents,
+		modules:       map[string]*HandlerInterface{},
 	}
 }
 
@@ -43,6 +33,8 @@ func NewModulesManager(folder string, chanEvents chan Module) ModulesManager {
 func (m ModulesManager) WatchFolder() {
 	w := watcher.New()
 
+	// Only notify rename and move events.
+	w.FilterOps(watcher.Create)
 	// Only files that match the regular expression during file listings
 	// will be watched.
 	r := regexp.MustCompile("[a-z0-9]+.so")
@@ -89,36 +81,21 @@ func (m *ModulesManager) processEvent(event watcher.Event) {
 		Name: event.Name(),
 	}
 
-	switch event.Op {
-	case watcher.Create:
-		{
-			module.Action = NEW
-			module.Handler, err = LoadPlugin(m.modulesFolder, event.Name())
-			if err != nil {
-				log.Println("error on loading plugin: ", err)
-				return
-			}
-
-		}
-	case watcher.Write:
-		{
-			module.Action = UPDATE
-			module.Handler, err = LoadPlugin(m.modulesFolder, event.Name())
-			if err != nil {
-				log.Println("error on loading plugin: ", err)
-				return
-			}
-		}
-	case watcher.Remove:
-		{
-			module.Action = REMOVE
-			module.Handler = m.modules[module.Name]
-		}
-	default:
-		module.Action = NONE
+	if event.Op != watcher.Create {
+		return
 	}
 
-	if module.Action != NONE {
-		m.chanEvents <- module
+	if _, ok := m.modules[module.Name]; ok {
+		// module was already loaded, skip it
+		return
 	}
+
+	handler, err := LoadPlugin(m.modulesFolder, module.Name)
+	if err != nil {
+		fmt.Println("error add a plugin ", err)
+		return
+	}
+	m.modules[module.Name] = &handler
+	module.Handler = &handler
+	m.chanEvents <- module
 }

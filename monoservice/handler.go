@@ -14,7 +14,7 @@ type HandlerInterface interface {
 	Methods() []string                    // HTTP methods used
 }
 
-func LoadPlugin(moduleFolder string, moduleName string) (*HandlerInterface, error) {
+func LoadPlugin(moduleFolder string, moduleName string) (HandlerInterface, error) {
 	plug, err := plugin.Open(filepath.Join(moduleFolder, moduleName))
 	if err != nil {
 		return nil, err
@@ -31,13 +31,5 @@ func LoadPlugin(moduleFolder string, moduleName string) (*HandlerInterface, erro
 		return nil, errors.New("unexpected type from module symbol")
 	}
 
-	return &handler, nil
-
-	// handler.Init()
-	// srv.router.HandleFunc(handler.Path(), func(w http.ResponseWriter, r *http.Request) {
-	// 	response := handler.Process(r)
-	// 	monoservice.RespondWithJSON(w, response.Code, response.JSONContent)
-	// }).Methods(handler.Methods()...)
-
-	// return nil
+	return handler, nil
 }
