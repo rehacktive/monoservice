@@ -50,7 +50,7 @@ Init() could be used to do specific task at start (connect to a database, for ex
 Build the plugin:
 
 ```sh
-go build -buildmode=plugin -o ./modules/helloplugin.so ./plugin/hello_plugin.go
+go build -buildmode=plugin -o ./modules/helloplugin.so ./plugins/hello/hello_plugin.go
 ```
 
 This will generate an ```helloplugin.so``` file inside the modules folder, that is an ELF shared object.
