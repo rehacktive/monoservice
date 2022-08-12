@@ -83,12 +83,3 @@ copy the new .so file in the folder and everything will work **automagically**.
 Caveat: the module code **needs** to be different and so the module compiled file name, otherwise nothing will be reloaded
 (and it could panic) - this is due to the plugin.Open(...) method that doesn't work on the same file and behaves sometimes weirdly.
 
-
-### Using Docker
-
-The Dockerfile defined here will automagically compile the module defined inside /plugin folder and run the service:
-
-```sh
-docker build . -t modular1
-docker run --publish 8880:8880 modular1
-```
