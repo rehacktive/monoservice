@@ -86,7 +86,6 @@ func (srv *Service) useModule(m monoservice.Module) {
 	}()
 
 	log.Println("add plugin ", m.Name)
-	log.Println(m)
 	handler, err := monoservice.LoadPlugin(modulesFolder, m.Name)
 	if err != nil {
 		fmt.Println("[skipping] error on LoadPlugin ", err)

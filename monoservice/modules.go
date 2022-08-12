@@ -45,7 +45,7 @@ func (m ModulesManager) WatchFolder() {
 			select {
 			case event := <-w.Event:
 				if !event.IsDir() {
-					m.processEvent(event)
+					m.setupModule(event.Name())
 				}
 			case err := <-w.Error:
 				log.Fatalln(err)
@@ -62,8 +62,10 @@ func (m ModulesManager) WatchFolder() {
 
 	// Print a list of all of the files and folders currently
 	// being watched and their paths.
-	for path, f := range w.WatchedFiles() {
-		fmt.Printf("%s: %s\n", path, f.Name())
+	for _, f := range w.WatchedFiles() {
+		if !f.IsDir() {
+			m.setupModule(f.Name())
+		}
 	}
 
 	fmt.Println()
@@ -74,20 +76,14 @@ func (m ModulesManager) WatchFolder() {
 	}
 }
 
-func (m *ModulesManager) processEvent(event watcher.Event) {
-	var err error
-
-	module := Module{
-		Name: event.Name(),
-	}
-
-	if event.Op != watcher.Create {
-		return
-	}
-
-	if _, ok := m.modules[module.Name]; ok {
+func (m ModulesManager) setupModule(name string) {
+	if _, ok := m.modules[name]; ok {
 		// module was already loaded, skip it
 		return
+	}
+
+	module := Module{
+		Name: name,
 	}
 
 	handler, err := LoadPlugin(m.modulesFolder, module.Name)
