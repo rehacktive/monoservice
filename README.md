@@ -13,7 +13,7 @@ Each plugin needs to implement the following interface, defined in service.go:
 type HandlerInterface interface {
 	Init()                                                 // this method will initialize the module
 	Path() string                                          // the path handled
-	Process(r *http.Request) utils.JSONResponse 		   // the logic for the handler
+	Process(r *monoservice.HTTPRequest) utils.JSONResponse 		   // the logic for the handler
 	Methods() []string                                     // HTTP methods used
 }
 ```
@@ -32,7 +32,7 @@ func (p handlerPlugin) Path() string {
 	return "/hello"
 }
 
-func (p handlerPlugin) Process(r *http.Request) monoservice.JSONResponse {
+func (p handlerPlugin) Process(r *monoservice.HTTPRequest) monoservice.JSONResponse {
 	return monoservice.JSONResponse{
 		JSONContent: `{"message":"hello from the plugin"}`,
 		Code:        http.StatusOK,
