@@ -19,7 +19,7 @@ func (p handlerPlugin) Path() string {
 	return "/hello"
 }
 
-func (p handlerPlugin) Process(r *http.Request) monoservice.JSONResponse {
+func (p handlerPlugin) Process(r *monoservice.HTTPRequest) monoservice.JSONResponse {
 	return monoservice.JSONResponse{
 		JSONContent: `{"message":"hello from the plugin"}`,
 		Code:        http.StatusOK,

@@ -3,6 +3,8 @@
 The idea is to have a very simple service that uses Golang plugins compiled as modules (.so) to implement different HTTP handlers.
 Each module can be worked on at different times, compiled and deployed, the service will detect a new module and load/use it.
 
+EXPERIMENTAL - WORK IN PROGRESS - TEST MISSING
+
 #### Step 1
 
 Each plugin needs to implement the following interface, defined in service.go:

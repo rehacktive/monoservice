@@ -2,16 +2,15 @@ package monoservice
 
 import (
 	"errors"
-	"net/http"
 	"path/filepath"
 	"plugin"
 )
 
 type HandlerInterface interface {
-	Init()                                // this method will initialize the module
-	Path() string                         // the path handled
-	Process(r *http.Request) JSONResponse // the logic for the handler
-	Methods() []string                    // HTTP methods used
+	Init()                               // this method will initialize the module
+	Path() string                        // the path handled
+	Process(r *HTTPRequest) JSONResponse // the logic for the handler
+	Methods() []string                   // HTTP methods used
 }
 
 func LoadPlugin(moduleFolder string, moduleName string) (HandlerInterface, error) {

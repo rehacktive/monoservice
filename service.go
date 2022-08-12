@@ -104,10 +104,7 @@ func (srv *Service) addHandler(handler monoservice.HandlerInterface) {
 	srv.registeredRoutes = append(srv.registeredRoutes, handler.Path())
 
 	handler.Init()
-	srv.router.HandleFunc(handler.Path(), func(w http.ResponseWriter, r *http.Request) {
-		response := handler.Process(r)
-		monoservice.RespondWithJSON(w, response.Code, response.JSONContent)
-	}).Methods(handler.Methods()...)
+	srv.router.HandleFunc(handler.Path(), wrapCall(handler)).Methods(handler.Methods()...)
 }
 
 func (srv *Service) reloadHandler(handler monoservice.HandlerInterface) {
@@ -119,16 +116,25 @@ func (srv *Service) reloadHandler(handler monoservice.HandlerInterface) {
 
 		if t == handler.Path() {
 			handler.Init()
-			route.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				response := handler.Process(r)
-				monoservice.RespondWithJSON(w, response.Code, response.JSONContent)
-			}).Methods(handler.Methods()...)
+			route.HandlerFunc(wrapCall(handler)).Methods(handler.Methods()...)
 		}
 		return nil
 	})
 }
 
 // utils
+func wrapCall(handler monoservice.HandlerInterface) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		request, err := monoservice.MapToHTTPRequest(r)
+		if err != nil {
+			fmt.Println("error on parsing the request: ", err)
+			monoservice.RespondWithJSON(w, http.StatusBadRequest, `{"error":"error on parsing the request, check logs"}`)
+			return
+		}
+		response := handler.Process(request)
+		monoservice.RespondWithJSON(w, response.Code, response.JSONContent)
+	}
+}
 
 func contains(s []string, e string) bool {
 	for _, a := range s {
